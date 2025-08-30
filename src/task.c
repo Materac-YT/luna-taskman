@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <ctype.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <cjson/cJSON.h>
@@ -59,6 +60,35 @@ void handle_kill(int sig) {
 	closedir(d);
 	printf("\n");
 	exit(0);
+}
+
+void fix_spaces(char *str) {
+	char *src = str;
+	char *dst = str;
+
+	while (isspace((unsigned char)*src)) {
+		src++;
+	}
+
+	int space_flag = 0;
+	while (*src) {
+		if (isspace((unsigned char)*src)) {
+			if (!space_flag) {
+				*dst++ = ' ';
+				space_flag = 1;
+			}
+		} else {
+			*dst++ = *src;
+			space_flag = 0;
+		}
+		src++;
+	}
+
+	if (dst > str && *(dst - 1) == ' ') {
+		dst--;
+	}
+
+	*dst = '\0';
 }
 
 int main(int argc, char *argv[]) {
@@ -124,6 +154,7 @@ int main(int argc, char *argv[]) {
 		printf("\n");
 		snprintf(prompt, sizeof(prompt), "Group: \"%s\" >>> ", group);
 		input = readline(prompt);
+		fix_spaces(input);
 		if (history_length > 0) {
 			const char *line = history_get(history_length)->line;
 			strncpy(lastinput, line, sizeof(lastinput));
